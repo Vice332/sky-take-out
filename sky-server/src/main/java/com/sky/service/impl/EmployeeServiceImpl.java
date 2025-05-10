@@ -2,6 +2,7 @@ package com.sky.service.impl;
 
 import com.sky.constant.MessageConstant;
 import com.sky.constant.StatusConstant;
+import com.sky.context.BaseContext;
 import com.sky.dto.EmployeeDTO;
 import com.sky.dto.EmployeeLoginDTO;
 import com.sky.entity.Employee;
@@ -43,7 +44,10 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
 
         //密码比对
-        // TODO 后期需要进行md5加密，然后再进行比对
+        // 对前端传过来的明文进行MD5加密处理
+        String passwordMD5 =   DigestUtils.md5DigestAsHex(password.getBytes());
+        password = passwordMD5;
+
         if (!password.equals(employee.getPassword())) {
             //密码错误
             throw new PasswordErrorException(MessageConstant.PASSWORD_ERROR);
@@ -65,8 +69,10 @@ public class EmployeeServiceImpl implements EmployeeService {
     public void save(EmployeeDTO employeeDTO) {
         Employee emloyee = new Employee();
 
+        //将dto转换为entity,对象属性拷贝，spring提供的工具类
         BeanUtils.copyProperties(employeeDTO,emloyee);
 
+        //设置默认状态，1表示正常  0表示禁用
         emloyee.setStatus(StatusConstant.ENABLE);
 
         //设置密码
@@ -75,9 +81,9 @@ public class EmployeeServiceImpl implements EmployeeService {
         emloyee.setCreateTime(LocalDateTime.now());
         emloyee.setUpdateTime(LocalDateTime.now());
 
-        //TODO 后期需要设置当前登录用户的ID
-        emloyee.setCreateUser(10L);
-        emloyee.setUpdateUser(10L);
+
+        emloyee.setCreateUser(BaseContext.getCurrentId());
+        emloyee.setUpdateUser(BaseContext.getCurrentId());
 
         employeeMapper.insert(emloyee);
     }
